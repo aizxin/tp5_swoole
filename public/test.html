@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <input type="text" name="msg" id="messgeText">
+    <button id="sendMessge">发送</button>
+</body>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script>
+    var room_id = '111ddva';
+    window.user = {
+        "id":Math.random().toFixed(2)*400 + 100,
+        'room_id':room_id,
+        'username':Math.random().toFixed(2)*400 + 100
+    }
+    var wsServer = 'ws://127.0.0.1:9501/?room_id='+room_id;
+    var websocket = new WebSocket(wsServer); 
+    websocket.onopen = function (evt) { 
+        websocket.send(JSON.stringify({
+            'message': "欢迎"+window.user.username+"进入房间",
+            'type': 'login',
+            "user": window.user
+        }));
+    }; 
+    
+    websocket.onclose = function (evt) { 
+        // websocket.send(JSON.stringify({
+        //     'message': window.user.username+"退出房间",
+        //     'type': 'logout',
+        //     "user":window.user
+        // }));
+    }; 
+    
+    websocket.onmessage = function (evt) { 
+        var data = jQuery.parseJSON(evt.data);
+        window.user = data.data.user
+        console.log(window.user); 
+    }; 
+    
+    websocket.onerror = function (evt, e) {
+        console.log('Error occured: ' + evt.data);
+    };
+    $('#sendMessge').on('click',function (e) {
+        websocket.send(JSON.stringify({
+            'message': $('#messgeText').val(),
+            'type': 'message',
+            "user":window.user
+        }));
+    });
+    </script>
+</html>
+    
+    
