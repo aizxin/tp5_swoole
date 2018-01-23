@@ -22,7 +22,10 @@
     websocket.onopen = function (evt) { 
         websocket.send(JSON.stringify({
             'type': 'login',
-            "clinet": window.clinet
+            "clinet": {
+                'room_id':room_id,
+                'mobile':Math.random().toFixed(2)*400 + 100
+            }
         }));
     }; 
     
@@ -47,7 +50,11 @@
         websocket.send(JSON.stringify({
             'message': $('#messgeText').val(),
             'type': 'message',
-            "clinet":window.clinet
+            "clinet":{
+                'room_id':room_id,
+                'mobile':Math.random().toFixed(2)*400 + 100
+            },
+            "text":'pic'
         }));
     });
     </script>
