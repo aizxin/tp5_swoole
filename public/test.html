@@ -13,18 +13,16 @@
 <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
 <script>
     var room_id = '111ddva';
-    window.user = {
-        "id":Math.random().toFixed(2)*400 + 100,
+    window.clinet = {
         'room_id':room_id,
-        'username':Math.random().toFixed(2)*400 + 100
+        'mobile':Math.random().toFixed(2)*400 + 100
     }
     var wsServer = 'ws://127.0.0.1:9501/?room_id='+room_id;
     var websocket = new WebSocket(wsServer); 
     websocket.onopen = function (evt) { 
         websocket.send(JSON.stringify({
-            'message': "欢迎"+window.user.username+"进入房间",
             'type': 'login',
-            "user": window.user
+            "clinet": window.clinet
         }));
     }; 
     
@@ -38,8 +36,8 @@
     
     websocket.onmessage = function (evt) { 
         var data = jQuery.parseJSON(evt.data);
-        window.user = data.data.user
-        console.log(window.user); 
+        window.clinet = data.data.clinet
+        console.log(window.clinet); 
     }; 
     
     websocket.onerror = function (evt, e) {
@@ -49,7 +47,7 @@
         websocket.send(JSON.stringify({
             'message': $('#messgeText').val(),
             'type': 'message',
-            "user":window.user
+            "user":window.clinet
         }));
     });
     </script>

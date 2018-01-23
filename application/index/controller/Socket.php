@@ -1,8 +1,10 @@
 <?php
 namespace app\index\controller;
 use app\index\im\Server;
+use app\index\im\Redis;
+use think\Cache;
 
-class Websocket extends Server
+class Socket extends Server
 {
     // 监听所有地址
     protected $host = '0.0.0.0';
@@ -22,18 +24,12 @@ class Websocket extends Server
         // 异步任务
         'task_worker_num'  => 8,
         // 防止 PHP 内存溢出
-        'task_max_request' => 0,
-        // // 心跳检测 没有客服端连接 60秒连接将被强制关闭
-        // 'heartbeat_idle_time' => 60,
-        // // 10秒遍历一次，60秒内未向服务器发送任何数据，此连接将被强制关闭
-        // 'heartbeat_check_interval' => 10,   
+        'task_max_request' => 0,   
         'dispatch_mode' => 2,
 		'debug_mode' => 1,
     ];
     // 指定 接听方法
     protected $onFunction = ['Task','Finish','WorkerStart'];
-    // redis
-    protected $redis = null;
     /** 
      * @Author: whero 
      * @Date: 2018-01-20 19:22:43 
@@ -41,13 +37,8 @@ class Websocket extends Server
      */
     public function onWorkerStart(\swoole_websocket_server $server, $worker_id)
     {
-        if ($this->redis == null) {
-            $redis = new \Redis();
-            $redis->pconnect("127.0.0.1", 6379);
-            // $redis->auth();
-            // $redis->select(3);
-            $server->redis = $redis;
-        }
+        $server->redis = Redis::init();
+        $server->cache = Cache::init();
     }
     /** 
      * @Author: whero 
@@ -68,7 +59,7 @@ class Websocket extends Server
     {
         $data = json_decode($frame->data,true);
         // 将客户端的socket id 再私聊用
-        $data['user']['fd'] = $frame->fd;
+        $data['clinet']['fd'] = $frame->fd;
         // 投递给 异步task完成
         $server->task($data);
     }
@@ -80,12 +71,12 @@ class Websocket extends Server
     public function onClose(\swoole_websocket_server $server, $fd)
     {
         if($server->redis->exists('cwlive'.$fd)){
-            $user = json_decode($server->redis->get('cwlive'.$fd),true);
+            $clinet = json_decode($server->redis->get('cwlive'.$fd),true);
             // 删除房间 成员
-            $server->redis->srem('cwlive'.$user['room_id'],$fd);
+            $server->redis->srem('cwlive'.$clinet['room_id'],$fd);
             // 发送给房间的所有人
-            foreach ($server->redis->smembers('cwlive'.$user['room_id']) as $roomfd) {
-                $server->push($roomfd,$this->jsonData($this->pushMessageData($server,['type'=>'logout','user'=>$user])));
+            foreach ($server->redis->smembers('cwlive'.$clinet['room_id']) as $roomfd) {
+                $server->push($roomfd,$this->jsonData($this->pushMessageData($server,['type'=>'logout','clinet'=>$clinet])));
             }
         }
         // 删除成员
@@ -97,11 +88,10 @@ class Websocket extends Server
      * @Desc: 异步任务
      */    
     public function onTask(\swoole_websocket_server $server, $task_id, $worker_id, $data){
-        
         // 发送给房间的所有人
-        foreach ($server->redis->smembers('cwlive'.$data['user']['room_id']) as $roomfd) {
+        foreach ($server->redis->smembers('cwlive'.$data['clinet']['room_id']) as $roomfd) {
             // 自己除外
-            if($roomfd == $data['user']['fd'] && trim($data['type']) == "message"){
+            if($roomfd == $data['clinet']['fd'] && trim($data['type']) == "message"){
                 continue;
             }
             $server->push($roomfd,$this->jsonData($this->pushMessageData($server,$data)));
@@ -115,13 +105,13 @@ class Websocket extends Server
      * @Desc:  异步任务回调函数
      */    
     public function onFinish(\swoole_websocket_server $server, $task_id, $data ){
-        if(!$server->redis->exists('cwlive'.$data['user']['fd'])){
-            $server->redis->set('cwlive'.$data['user']['fd'],json_encode($data['user']));   
+        if(!$server->redis->exists('cwlive'.$data['clinet']['fd'])){
+            $server->redis->set('cwlive'.$data['clinet']['fd'],json_encode($data['clinet']));   
         }
         if(trim($data['type']) == "message"){
             $data['datatime'] = time();
-            $server->redis->lpush('cwlivemessage'.$data['user']['room_id'],json_encode($data));            
-        }
+            $server->redis->lpush('cwlivemessage'.$data['clinet']['room_id'],json_encode($data));            
+        }        
 	}
     /** 
      * @Author: whero 
@@ -160,15 +150,12 @@ class Websocket extends Server
         //  default:
         //      break;
         // }
-        $count = $server->redis->ssize('cwlive'.trim($data["user"]['room_id']));
-        trim($data['type']) == "login" and $count += 1;
+        $data['user'] = ['username'=>$data["clinet"]['mobile']];
+        $count = $server->redis->ssize('cwlive'.trim($data["clinet"]['room_id']));
+        trim($data['type']) == "login"  and $data["message"] =  '欢迎'.$data['user']['username'].'进入房间';
         trim($data['type']) == "logout" and $data["message"] =  $data['user']['username'].'退出房间';
-        $dataData = array(
-            'user'=>$data["user"],
-            'datetime' => date('Y-m-d H:i:s'),
-            "message"=>$data["message"],
-            'count'=>$count
-        );
-        return $dataData;
+        $data['count'] = $count;
+        $data['datetime'] = date('Y-m-d H:i:s');
+        return $data;
     }
 }
