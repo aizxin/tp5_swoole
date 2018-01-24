@@ -22,7 +22,8 @@
     websocket.onopen = function (evt) { 
         websocket.send(JSON.stringify({
             'type': 'login',
-            "clinet": window.clinet
+            'room_id':window.clinet.room_id,
+            'mobile':window.clinet.mobile
         }));
     }; 
     
@@ -36,8 +37,7 @@
     
     websocket.onmessage = function (evt) { 
         var data = jQuery.parseJSON(evt.data);
-        window.clinet = data.data.clinet
-        console.log(window.clinet); 
+        console.log(data); 
     }; 
     
     websocket.onerror = function (evt, e) {
@@ -47,66 +47,9 @@
         websocket.send(JSON.stringify({
             'message': $('#messgeText').val(),
             'type': 'message',
-            "clinet":window.clinet
+            'room_id':window.clinet.room_id,
         }));
     });
     </script>
 </html>
-<!-- code
-:
-true
-data
-:
-{message: "sbad", type: "message", clinet: {room_id: "111ddva", mobile: 232, fd: 12},…}
-clinet
-:
-{room_id: "111ddva", mobile: 232, fd: 12}
-count
-:
-2
-datetime
-:
-"2018-01-23 17:38:03"
-message
-:
-"sbad"
-type
-:
-"message"
-user
-:
-{username: 232}
-message
-:
-"ok" -->
-
-
-<!-- code
-:
-true
-data
-:
-{type: "login", clinet: {room_id: "111ddva", mobile: 496, fd: 11}, user: {username: 496},…}
-clinet
-:
-{room_id: "111ddva", mobile: 496, fd: 11}
-count
-:
-3
-datetime
-:
-"2018-01-23 17:37:18"
-message
-:
-"欢迎496进入房间"
-type
-:
-"login"
-user
-:
-{username: 496}
-message
-:
-"ok"
-     -->
     

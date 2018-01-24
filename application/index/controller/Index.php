@@ -7,7 +7,7 @@ class Index
     public function index()
     {
         $redis = Redis::init();
-        
+        $redis->flushall();
         var_dump($redis->keys("*"));
     }
 }

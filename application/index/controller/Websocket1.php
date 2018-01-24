@@ -3,7 +3,6 @@ namespace app\index\controller;
 use app\index\im\Server;
 use app\index\im\Redis;
 use think\Cache;
-
 class Socket extends Server
 {
     // 监听所有地址
@@ -48,7 +47,7 @@ class Socket extends Server
     public function onOpen(\swoole_websocket_server $server, $request)
     {      
         // 聊天室添加成员
-        // $server->redis->sadd('cwlive'.$request->get['room_id'],$request->fd);
+        $server->redis->sadd('cwlive'.$request->get['room_id'],$request->fd);
     }
     /** 
      * @Author: whero 
@@ -59,11 +58,7 @@ class Socket extends Server
     {
         $data = json_decode($frame->data,true);
         // 将客户端的socket id 再私聊用
-        $data['fd'] = $frame->fd;
-        // 聊天室添加成员
-        if(trim($data['type']) == "login"){
-            $server->redis->sadd('cwlive'.$data['room_id'],$data['fd']);
-        }
+        $data['clinet']['fd'] = $frame->fd;
         // 投递给 异步task完成
         $server->task($data);
     }
@@ -80,7 +75,7 @@ class Socket extends Server
             $server->redis->srem('cwlive'.$clinet['room_id'],$fd);
             // 发送给房间的所有人
             foreach ($server->redis->smembers('cwlive'.$clinet['room_id']) as $roomfd) {
-                $server->push($roomfd,$this->jsonData($this->pushMessageData($server,['type'=>'logout','username'=>$clinet['mobile'],'room_id'=>$clinet['room_id']])));
+                $server->push($roomfd,$this->jsonData($this->pushMessageData($server,['type'=>'logout','clinet'=>$clinet])));
             }
         }
         // 删除成员
@@ -93,9 +88,9 @@ class Socket extends Server
      */    
     public function onTask(\swoole_websocket_server $server, $task_id, $worker_id, $data){
         // 发送给房间的所有人
-        foreach ($server->redis->smembers('cwlive'.$data['room_id']) as $roomfd) {
+        foreach ($server->redis->smembers('cwlive'.$data['clinet']['room_id']) as $roomfd) {
             // 自己除外
-            if($roomfd == $data['fd'] && trim($data['type']) == "message"){
+            if($roomfd == $data['clinet']['fd'] && trim($data['type']) == "message"){
                 continue;
             }
             $server->push($roomfd,$this->jsonData($this->pushMessageData($server,$data)));
@@ -109,10 +104,13 @@ class Socket extends Server
      * @Desc:  异步任务回调函数
      */    
     public function onFinish(\swoole_websocket_server $server, $task_id, $data ){
-        // 将会员的fd和room_id存入缓存  用来退出聊天时用
-        if(trim($data['type']) == "login" && !$server->redis->exists('cwlive'.$data['fd'])){
-            $server->redis->set('cwlive'.$data['fd'],json_encode(['mobile'=>$data['mobile'],'fd'=>$data['fd'],'room_id'=>$data['room_id']]));
-        }      
+        if(!$server->redis->exists('cwlive'.$data['clinet']['fd'])){
+            $server->redis->set('cwlive'.$data['clinet']['fd'],json_encode($data['clinet']));   
+        }
+        if(trim($data['type']) == "message"){
+            $data['datatime'] = time();
+            $server->redis->lpush('cwlivemessage'.$data['clinet']['room_id'],json_encode($data));            
+        }        
 	}
     /** 
      * @Author: whero 
@@ -143,30 +141,20 @@ class Socket extends Server
      */    
     private function pushMessageData($server,$data)
     {
-        $avatars = [
-            'http://e.hiphotos.baidu.com/image/h%3D200/sign=08f4485d56df8db1a32e7b643922dddb/1ad5ad6eddc451dad55f452ebefd5266d116324d.jpg',
-            'http://tva3.sinaimg.cn/crop.0.0.746.746.50/a157f83bjw8f5rr5twb5aj20kq0kqmy4.jpg',
-            'http://www.ld12.com/upimg358/allimg/c150627/14353W345a130-Q2B.jpg',
-            'http://www.qq1234.org/uploads/allimg/150121/3_150121144650_12.jpg',
-            'http://tva1.sinaimg.cn/crop.4.4.201.201.50/9cae7fd3jw8f73p4sxfnnj205q05qweq.jpg',
-            'http://tva1.sinaimg.cn/crop.0.0.749.749.50/ac593e95jw8f90ixlhjdtj20ku0kt0te.jpg',
-            'http://tva4.sinaimg.cn/crop.0.0.674.674.50/66f802f9jw8ehttivp5uwj20iq0iqdh3.jpg',
-            'http://tva4.sinaimg.cn/crop.0.0.1242.1242.50/6687272ejw8f90yx5n1wxj20yi0yigqp.jpg',
-            'http://tva2.sinaimg.cn/crop.0.0.996.996.50/6c351711jw8f75bqc32hsj20ro0roac4.jpg',
-            'http://tva2.sinaimg.cn/crop.0.0.180.180.50/6aba55c9jw1e8qgp5bmzyj2050050aa8.jpg'
-        ];
-        $res['username'] = isset($data['mobile']) ? $data['mobile'] : '测试';   // 测试用
-        trim($data['type']) == "login"  and $data["message"] =  '欢迎'.$res['username'].'进入房间';
-        trim($data['type']) == "logout" and $data["message"] =  $data['username'].'退出房间';
-        $res['message'] = htmlspecialchars($data['message']);
-        $res['count'] = $server->redis->ssize('cwlive'.trim($data['room_id']));
-        $res['datetime'] = date('Y-m-d H:i:s');
-        
-        if(trim($data['type']) == "message"){
-            $clinet = json_decode($server->redis->get('cwlive'.$data['fd']),true);  
-            $res['username'] =  $clinet['mobile'];      
-        }
-        $res['avatar'] = $avatars[array_rand($avatars)];
-        return $res;
+        // switch( trim($data['type']) ){
+		// 	case 'login':
+		// 		break;
+		// 	case 'message':
+        //         break;
+        //  default:
+        //      break;
+        // }
+        $data['user'] = ['username'=>$data["clinet"]['mobile']];
+        $count = $server->redis->ssize('cwlive'.trim($data["clinet"]['room_id']));
+        trim($data['type']) == "login"  and $data["message"] =  '欢迎'.$data['user']['username'].'进入房间';
+        trim($data['type']) == "logout" and $data["message"] =  $data['user']['username'].'退出房间';
+        $data['count'] = $count;
+        $data['datetime'] = date('Y-m-d H:i:s');
+        return $data;
     }
 }
