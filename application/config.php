@@ -185,7 +185,7 @@ return [
     "redis" =>[
         'host' => 'r-2ze83724de7df364.redis.rds.aliyuncs.com',
         'port'       => 6379,
-        'select'     => 0,
+        // 'select'     => 0,
         // 'timeout'    => 0,
         'expire'     => 0,
         // 'persistent' => true,
@@ -207,7 +207,7 @@ return [
             'port' => 6379,
             // 'timeout' => 30,
             // 'persistent' => true,
-            'select' => 1,
+            // 'select' => 1,
             'password' => 'Mn517628mN',
             'expire' => 0,
         ],
