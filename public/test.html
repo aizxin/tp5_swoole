@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
 </head>
+
 <body>
     <input type="text" name="msg" id="messgeText">
     <button id="sendMessge">发送</button>
@@ -14,42 +16,42 @@
 <script>
     var room_id = '111ddva';
     window.clinet = {
-        'room_id':room_id,
-        'mobile':Math.random().toFixed(2)*400 + 100
+        'room_id': room_id,
+        'mobile': Math.random().toFixed(2) * 400 + 100
     }
-    var wsServer = 'ws://127.0.0.1:9501/?room_id='+room_id;
-    var websocket = new WebSocket(wsServer); 
-    websocket.onopen = function (evt) { 
+    var wsServer = 'wss://im.izxin.com:9501/?room_id=' + room_id;
+    var websocket = new WebSocket(wsServer);
+    websocket.onopen = function(evt) {
         websocket.send(JSON.stringify({
             'type': 'login',
-            'room_id':window.clinet.room_id,
-            'mobile':window.clinet.mobile
+            'room_id': window.clinet.room_id,
+            'mobile': window.clinet.mobile
         }));
-    }; 
-    
-    websocket.onclose = function (evt) { 
+    };
+
+    websocket.onclose = function(evt) {
         // websocket.send(JSON.stringify({
         //     'message': window.user.username+"退出房间",
         //     'type': 'logout',
         //     "user":window.user
         // }));
-    }; 
-    
-    websocket.onmessage = function (evt) { 
+    };
+
+    websocket.onmessage = function(evt) {
         var data = jQuery.parseJSON(evt.data);
-        console.log(data); 
-    }; 
-    
-    websocket.onerror = function (evt, e) {
+        console.log(data);
+    };
+
+    websocket.onerror = function(evt, e) {
         console.log('Error occured: ' + evt.data);
     };
-    $('#sendMessge').on('click',function (e) {
+    $('#sendMessge').on('click', function(e) {
         websocket.send(JSON.stringify({
             'message': $('#messgeText').val(),
             'type': 'message',
-            'room_id':window.clinet.room_id,
+            'room_id': window.clinet.room_id,
         }));
     });
-    </script>
+</script>
+
 </html>
-    
