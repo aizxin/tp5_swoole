@@ -183,7 +183,7 @@ return [
     // | redis
     // +----------------------------------------------------------------------
     "redis" =>[
-        'host' => ' r-2ze83724de7df364.redis.rds.aliyuncs.com',
+        'host' => 'r-2ze83724de7df364.redis.rds.aliyuncs.com',
         'port'       => 6379,
         'select'     => 0,
         // 'timeout'    => 0,
