@@ -8,7 +8,7 @@ class Index
     {
         $redis = Redis::init();
         // $redis->flushall();
-        var_dump($redis->lgetrange("cwlivemessage111ddva",0,20));
+        $redis->sadd("room_id",1);
         var_dump($redis->keys("*"));
     }
 }
