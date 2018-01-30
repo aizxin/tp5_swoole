@@ -28,8 +28,8 @@ class Socket extends Server
         'task_max_request' => 0,   
         'dispatch_mode' => 2,
         'debug_mode' => 1,
-        // 'ssl_cert_file' => "/home/tp5_swoole/public/ssl/1_im.izxin.com_bundle.crt",
-        // 'ssl_key_file'  => "/home/tp5_swoole/public/ssl/2_im.izxin.com.key",
+        'ssl_cert_file' => "/home/tp5_swoole/public/ssl/1_im.izxin.com_bundle.crt",
+        'ssl_key_file'  => "/home/tp5_swoole/public/ssl/2_im.izxin.com.key",
     ];
     // 指定 接听方法
     protected $onFunction = ['Task','Finish','WorkerStart'];

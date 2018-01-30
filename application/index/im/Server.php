@@ -26,8 +26,8 @@ abstract class Server
         // 实例化 Swoole 服务
         switch ($this->serverType) {
             case 'socket':
-                $this->swoole = new swoole_websocket_server($this->host, $this->port);
-                // $this->swoole = new swoole_websocket_server($this->host, $this->port,SWOOLE_PROCESS, SWOOLE_SOCK_TCP | SWOOLE_SSL);
+                // $this->swoole = new swoole_websocket_server($this->host, $this->port);
+                $this->swoole = new swoole_websocket_server($this->host, $this->port,SWOOLE_PROCESS, SWOOLE_SOCK_TCP | SWOOLE_SSL);
                 $eventList    = array_merge(['Open', 'Message', 'Close', 'HandShake'],$this->onFunction);
                 break;
             case 'http':

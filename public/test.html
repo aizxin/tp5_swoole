@@ -19,9 +19,9 @@
         'room_id': room_id,
         'mobile': Math.random().toFixed(2) * 400 + 100
     }
-    var websocket = new WebSocket('ws://39.106.214.20:9501');
+    var wsServer = 'wss://im.izxin.com:9501/?room_id=' + room_id;
+    var websocket = new WebSocket(wsServer);
     websocket.onopen = function(evt) {
-        console.log("Connected to WebSocket server.");
         websocket.send(JSON.stringify({
             'type': 'login',
             'room_id': window.clinet.room_id,
@@ -54,4 +54,4 @@
     });
 </script>
 
-</html
+</html>
