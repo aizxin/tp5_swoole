@@ -196,7 +196,7 @@ class Socket extends Server
      * @Date: 2018-01-24 21:05:35 
      * @Desc:  获取用户信息
      */    
-    private function getUserInfo($fd,$data=array())
+    private function getUserInfo($server,$fd,$data=array())
     {
         $avatars = [
             'http://e.hiphotos.baidu.com/image/h%3D200/sign=08f4485d56df8db1a32e7b643922dddb/1ad5ad6eddc451dad55f452ebefd5266d116324d.jpg',
