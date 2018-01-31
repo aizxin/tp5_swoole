@@ -63,11 +63,10 @@ class Socket extends Server
         $data = json_decode($frame->data,true);
         // 将客户端的socket id 再私聊用
         $data['fd'] = $frame->fd;
-        $server->push($frame->fd,$this->jsonData($data));
         // 聊天室添加成员
-        // !$server->redis->sIsMember($data['room_id'],$data['fd']) and $server->redis->sadd($data['room_id'],$data['fd']);
+        !$server->redis->sIsMember($data['room_id'],$data['fd']) and $server->redis->sadd($data['room_id'],$data['fd']);
         // 投递给 异步task完成
-        // $server->task($data);
+        $server->task($data);
     }
     /** 
      * @Author: whero 
