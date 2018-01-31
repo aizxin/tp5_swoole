@@ -19,7 +19,7 @@ class Socket extends Server
         // 工作进程
         'worker_num' => 1,
         // 守护进程化
-        'daemonize'  => false,
+        'daemonize'  => true,
         // 监听队列的长度
         'backlog'    => 128,
         // 异步任务
@@ -176,15 +176,15 @@ class Socket extends Server
     private function pushMessageData($server,$data)
     {
        if(trim($data['type']) == "login"){
-            $res = $this->getUserInfo($data['fd'],$data);
+            $res = $this->getUserInfo($server,$data['fd'],$data);
             $res["message"] = '欢迎'.$res['username'].'进入房间';
         }
         if(trim($data['type']) == "logout"){
-            $res = $this->getUserInfo($data['fd'],[]);
+            $res = $this->getUserInfo($server,$data['fd']);
             $res["message"] = $res['username'].'退出房间';
         }
         if(trim($data['type']) == "message"){
-            $res = $this->getUserInfo($data['fd'],[]);  
+            $res = $this->getUserInfo($server,$data['fd']);  
             $res['message'] = htmlspecialchars($data['message']);   
         }
         $res['type'] = $data['type'];
