@@ -19,7 +19,7 @@ class Socket extends Server
         // 工作进程
         'worker_num' => 1,
         // 守护进程化
-        'daemonize'  => true,
+        'daemonize'  => false,
         // 监听队列的长度
         'backlog'    => 128,
         // 异步任务
